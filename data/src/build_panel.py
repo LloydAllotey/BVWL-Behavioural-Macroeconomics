@@ -1,10 +1,17 @@
 import pandas as pd
 import glob
 import os
+import sys
 
-# this script sits inside the Data folder
-data = os.path.dirname(os.path.abspath(__file__))
-spf = os.path.join(data, "SPF_raw", "SPF_individual_forecasts")
+# this script lives in data/src/, so one level up is the data folder
+data = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+spf = os.path.join(data, "raw", "spf", "SPF_individual_forecasts")
+out_path = os.path.join(data, "processed", "spf_panel.csv")
+
+# don't build a second panel if one is already there
+if os.path.exists(out_path):
+    print("spf_panel.csv already exists in data/processed, delete it first to rebuild")
+    sys.exit()
 
 # the 1-year-ahead forecast falls on a different month depending on the survey quarter
 month = {1: "Dec", 2: "Mar", 3: "Jun", 4: "Sep"}
@@ -40,5 +47,6 @@ for path in sorted(glob.glob(os.path.join(spf, "*.csv"))):
 panel = pd.DataFrame(rows, columns=["round", "year", "quarter", "forecaster", "target", "point"])
 panel["point"] = pd.to_numeric(panel["point"], errors="coerce")
 
-panel.to_csv(os.path.join(data, "spf_panel.csv"), index=False)
+os.makedirs(os.path.dirname(out_path), exist_ok=True)
+panel.to_csv(out_path, index=False)
 print(len(panel), "forecasts from", panel["round"].nunique(), "quarters")
