@@ -6,11 +6,11 @@ import sys
 # this script lives in data/src/, so one level up is the data folder
 data = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 spf = os.path.join(data, "raw", "spf", "SPF_individual_forecasts")
-out_path = os.path.join(data, "processed", "spf_panel.csv")
+out_path = os.path.join(data, "processed", "spf_panel.xlsx")
 
 # don't build a second panel if one is already there
 if os.path.exists(out_path):
-    print("spf_panel.csv already exists in data/processed, delete it first to rebuild")
+    print("spf_panel.xlsx already exists in data/processed, delete it first to rebuild")
     sys.exit()
 
 # the 1-year-ahead forecast falls on a different month depending on the survey quarter
@@ -42,11 +42,18 @@ for path in sorted(glob.glob(os.path.join(spf, "*.csv"))):
                 break                                       # start of the next block
             col = line.split(",")
             if col[0] == want:
-                rows.append([name, year, quarter, col[1], col[0], col[2]])
+                rows.append([year, quarter, name, col[1], col[0], col[2]])
 
-panel = pd.DataFrame(rows, columns=["round", "year", "quarter", "forecaster", "target", "point"])
+panel = pd.DataFrame(rows, columns=["year", "quarter", "round", "forecaster", "target", "point"])
 panel["point"] = pd.to_numeric(panel["point"], errors="coerce")
+panel["forecaster"] = pd.to_numeric(panel["forecaster"], errors="coerce")
+
+# numeric time axis for scatter plots: 1999Q1 -> 1999.00, 1999Q2 -> 1999.25, ...
+panel["round - helper"] = panel["year"] + (panel["quarter"] - 1) / 4
+
+panel = panel[["year", "quarter", "round", "round - helper", "forecaster", "target", "point"]]
+panel = panel.rename(columns={"point": "Expected Inflation - Median obs. per round"})
 
 os.makedirs(os.path.dirname(out_path), exist_ok=True)
-panel.to_csv(out_path, index=False)
+panel.to_excel(out_path, sheet_name="spf_panel", index=False)
 print(len(panel), "forecasts from", panel["round"].nunique(), "quarters")
