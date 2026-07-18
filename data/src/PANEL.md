@@ -17,7 +17,7 @@ target and its month depends on the quarter (Q1→Dec, Q2→Mar, Q3→Jun, Q4→
 12 months out). The script builds that label per round and keeps those rows from the
 HICP block only.
 
-**Output columns:** `round, year, quarter, forecaster, target, point`
+**Output columns:** `year, quarter, round, round helper, forecaster, target, expected inflation - median obs. per round`
 (one row per forecaster per quarter; blank `point` = respondent gave a distribution
 but no point — kept as empty). Blanks dropped not imputed.
 
